@@ -7,9 +7,18 @@ import { Camera, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function Page() {
-
+  const [searchQuery, setSearchQuery] = useState("");
+  const [products, setProducts] = useState<any[]>([]);
   const [imageURL, setImageURL] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) return;
+
+    const res = await fetch(`/api/products?q=${encodeURIComponent(searchQuery)}`);
+    const data = await res.json();
+    setProducts(data.products || []);
+  };
 
   const handleCameraClick = () => {
     fileInputRef.current?.click();
@@ -40,8 +49,10 @@ export default function Page() {
             "w-full rounded-full py-6 pr-26",
             imageURL ? "pl-14" : "pl-6"
           )}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
         />
-        <Button variant="primary" className="rounded-full absolute right-2 cursor-pointer">
+        <Button variant="primary" className="rounded-full absolute right-2 cursor-pointer" onClick={handleSearch}>
           <Search size={6} />
         </Button>
         <Button variant="outline" className="rounded-full absolute right-13 cursor-pointer" onClick={handleCameraClick}>
@@ -55,6 +66,17 @@ export default function Page() {
           onChange={handleFileChange}
           style={{ display: "none" }}
         />
+      </div>
+
+      {/* Product Results */}
+      <div className="w-full max-w-4xl grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+        {products.map((product, idx) => (
+          <div key={idx} className="border rounded-lg p-4 flex flex-col items-center">
+            <img src={product.thumbnail} alt={product.title} className="h-40 object-contain mb-2" />
+            <h2 className="text-sm font-medium text-center">{product.title}</h2>
+            <p className="text-sm text-muted-foreground">{product.price}</p>
+          </div>
+        ))}
       </div>
     </div>
   );
