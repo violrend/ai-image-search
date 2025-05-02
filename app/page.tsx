@@ -5,19 +5,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Camera, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useProductSearch } from "@/hooks/useProductSearch";
 
 export default function Page() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [products, setProducts] = useState<any[]>([]);
+  const [submittedQuery, setSubmittedQuery] = useState("");
   const [imageURL, setImageURL] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) return;
+  const {
+    data: products = [],
+    isLoading,
+    isError,
+  } = useProductSearch(submittedQuery, !!submittedQuery);
 
-    const res = await fetch(`/api/products?q=${encodeURIComponent(searchQuery)}`);
-    const data = await res.json();
-    setProducts(data.products || []);
+  const handleSearch = () => {
+    setSubmittedQuery(searchQuery.trim());
   };
 
   const handleCameraClick = () => {
@@ -35,8 +38,8 @@ export default function Page() {
   return (
     <div className="h-screen w-full flex flex-col items-center p-5 gap-2">
       <div className="flex h-24 relative items-center w-9/10 md:w-full md:max-w-160">
-      {/* Image Preview inside the input */}
-      {imageURL && (
+        {/* Image Preview inside the input */}
+        {imageURL && (
           <img
             src={imageURL}
             alt="Preview"
@@ -44,19 +47,32 @@ export default function Page() {
           />
         )}
         <Input
-          placeholder={ imageURL ?"+ Additional info..." :"Search for Items..."}
+          placeholder={
+            imageURL ? "+ Additional info..." : "Search for Items..."
+          }
           className={cn(
             "w-full rounded-full py-6 pr-26",
             imageURL ? "pl-14" : "pl-6"
           )}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
+          disabled={isLoading}
         />
-        <Button variant="primary" className="rounded-full absolute right-2 cursor-pointer" onClick={handleSearch}>
+        <Button
+          variant="primary"
+          className="rounded-full absolute right-2 cursor-pointer"
+          onClick={handleSearch}
+          disabled={isLoading}
+        >
           <Search size={6} />
         </Button>
-        <Button variant="outline" className="rounded-full absolute right-13 cursor-pointer" onClick={handleCameraClick}>
-          <Camera size={6}/>
+        <Button
+          variant="outline"
+          className="rounded-full absolute right-13 cursor-pointer"
+          onClick={handleCameraClick}
+          disabled={isLoading}
+        >
+          <Camera size={6} />
         </Button>
         {/* Hidden File Input */}
         <input
@@ -68,11 +84,26 @@ export default function Page() {
         />
       </div>
 
+      {/* Loading/Error states */}
+      {isLoading && (
+        <p className="text-sm text-muted-foreground">Loading products...</p>
+      )}
+      {isError && (
+        <p className="text-sm text-destructive">Failed to fetch products.</p>
+      )}
+
       {/* Product Results */}
       <div className="w-full max-w-4xl grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4">
-        {products.map((product, idx) => (
-          <div key={idx} className="border rounded-lg p-4 flex flex-col items-center">
-            <img src={product.thumbnail} alt={product.title} className="h-40 object-contain mb-2" />
+        {products.map((product: any, idx: number) => (
+          <div
+            key={idx}
+            className="border rounded-lg p-4 flex flex-col items-center"
+          >
+            <img
+              src={product.thumbnail}
+              alt={product.title}
+              className="h-40 object-contain mb-2"
+            />
             <h2 className="text-sm font-medium text-center">{product.title}</h2>
             <p className="text-sm text-muted-foreground">{product.price}</p>
           </div>
