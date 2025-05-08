@@ -12,7 +12,7 @@ export async function GET(req: Request) {
   const params = new URLSearchParams({
     engine: "google_shopping",
     q: query,
-    api_key: apiKey!,
+    api_key: 7585e535ff6150e5560c96925641c5cad34eae29718a8ce7b357affd735a7883,
   });
 
   const res = await fetch(`https://serpapi.com/search.json?${params}`);
